@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"os"
 	"strings"
 )
 
@@ -39,6 +40,43 @@ func teeDemo() {
 	fmt.Println(&buffer)
 }
 
+func copyFile(srcPath, dstPath string) error {
+	openedFile, err := os.Open(srcPath)
+	if err != nil {
+		return err
+	}
+	defer openedFile.Close()
+
+	createdFile, err := os.Create(dstPath)
+	if err != nil {
+		return err
+	}
+	defer createdFile.Close()
+
+	_, err = io.Copy(createdFile, openedFile)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func concatReaders(readers ...io.Reader) (string, error) {
+	data, err := io.ReadAll(io.MultiReader(readers...))
+	if err != nil {
+		return "", err
+	}
+	return string(data), nil
+}
+
+func writeToMulti(data string, writers ...io.Writer) error {
+	_, err := io.MultiWriter(writers...).Write([]byte(data))
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func main() {
 	// Задание 1
 	expression := strings.NewReader("Hello, World!")
@@ -59,4 +97,29 @@ func main() {
 
 	// Задание 3
 	teeDemo()
+
+	// Задание 4
+	err = copyFile("input.txt", "output.txt")
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	// Задание 5
+
+	firstPart := strings.NewReader("I love tea! ")
+	secondPart := strings.NewReader("And...I love kittens! ")
+	thirdPart := strings.NewReader("I think that`s all.")
+
+	concatedMessage, err := concatReaders(firstPart, secondPart, thirdPart)
+	if err != nil {
+		fmt.Println(err)
+	}
+	fmt.Println(concatedMessage)
+
+	// Задание 6
+	var firstBuf bytes.Buffer
+	var secondBuf bytes.Buffer
+	writeToMulti("Hello, MultiWriter!", &firstBuf, &secondBuf)
+
+	fmt.Println(&firstBuf, &secondBuf)
 }
