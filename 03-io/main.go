@@ -79,18 +79,23 @@ func writeToMulti(data string, writers ...io.Writer) error {
 }
 
 func readAllWithEOF(r io.Reader) ([]byte, error) {
+	var result bytes.Buffer
 	buf := make([]byte, 4096)
 	for {
-		_, err := r.Read(buf)
+		n, err := r.Read(buf)
+
+		if n > 0 {
+			result.Write(buf[:n])
+		}
 
 		if err != nil {
 			if errors.Is(err, io.EOF) {
 				break
 			}
-			return buf, err
+			return nil, err
 		}
 	}
-	return buf, nil
+	return result.Bytes(), nil
 }
 
 func main() {
