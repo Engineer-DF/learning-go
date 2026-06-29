@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -77,6 +78,21 @@ func writeToMulti(data string, writers ...io.Writer) error {
 	return nil
 }
 
+func readAllWithEOF(r io.Reader) ([]byte, error) {
+	buf := make([]byte, 4096)
+	for {
+		_, err := r.Read(buf)
+
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				break
+			}
+			return buf, err
+		}
+	}
+	return buf, nil
+}
+
 func main() {
 	// Задание 1
 	expression := strings.NewReader("Hello, World!")
@@ -122,4 +138,9 @@ func main() {
 	writeToMulti("Hello, MultiWriter!", &firstBuf, &secondBuf)
 
 	fmt.Println(&firstBuf, &secondBuf)
+
+	// Задание 7
+	someMessage := strings.NewReader("Meow! <3")
+	buffer3, err := readAllWithEOF(someMessage)
+	fmt.Println(string(buffer3))
 }
