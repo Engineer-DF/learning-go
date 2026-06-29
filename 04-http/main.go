@@ -13,17 +13,15 @@ type User struct {
 }
 
 func usersHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method == http.MethodGet {
-		_, err := http.Get("")
-		if err != nil {
-			fmt.Println(err)
-		}
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(users)
-		//w.Write([]byte(`{"status":"ok"}`))
-	} else {
-		fmt.Println("Unexpected action!")
+	if r.Method != http.MethodGet {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(users); err != nil {
+		http.Error(w, "failed to encode JSON", http.StatusInternalServerError)
+		return
 	}
 }
 
