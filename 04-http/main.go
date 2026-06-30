@@ -13,15 +13,35 @@ type User struct {
 }
 
 func usersHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
+	switch r.Method {
 
-	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(users); err != nil {
-		http.Error(w, "failed to encode JSON", http.StatusInternalServerError)
-		return
+	case http.MethodGet:
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		if err := json.NewEncoder(w).Encode(users); err != nil {
+			fmt.Printf("failed to encode JSON: %v\n", err)
+		}
+
+	case http.MethodPost:
+		var newUser User
+
+		if err := json.NewDecoder(r.Body).Decode(&newUser); err != nil {
+			http.Error(w, "bad request body", http.StatusBadRequest)
+			return
+		}
+
+		newUser.ID = len(users)
+		users = append(users, newUser)
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusCreated)
+		if err := json.NewEncoder(w).Encode(newUser); err != nil {
+			fmt.Printf("failed to encode JSON %V\n", err)
+		}
+
+	default:
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+
 	}
 }
 
