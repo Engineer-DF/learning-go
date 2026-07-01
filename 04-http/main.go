@@ -13,7 +13,7 @@ type task struct {
 	Done        bool   `json:"done"`
 }
 
-func GetTask(w http.ResponseWriter, r *http.Request) {
+func ListTasks(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 
@@ -22,7 +22,7 @@ func GetTask(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func PostTask(w http.ResponseWriter, r *http.Request) {
+func CreateTask(w http.ResponseWriter, r *http.Request) {
 	var newTask task
 
 	if err := json.NewDecoder(r.Body).Decode(&newTask); err != nil {
@@ -42,7 +42,7 @@ func PostTask(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func PutTask(w http.ResponseWriter, r *http.Request) {
+func UpdateTask(w http.ResponseWriter, r *http.Request) {
 	// add functionality later
 }
 
@@ -59,8 +59,8 @@ var tasks = []task{
 func main() {
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("GET /tasks", GetTask)
-	mux.HandleFunc("POST /tasks", PostTask)
+	mux.HandleFunc("GET /tasks", ListTasks)
+	mux.HandleFunc("POST /tasks", CreateTask)
 
 	http.ListenAndServe(":8080", mux)
 }
