@@ -6,69 +6,61 @@ import (
 	"net/http"
 )
 
-type User struct {
-	ID   int    `json:"id"`
-	Name string `json:"name,omitempty"`
-	Age  int    `json:"age,omitempty"`
+type task struct {
+	ID          int    `json:"id"`
+	Title       string `json:"title"`
+	Description string `json:"description,omitempty"`
+	Done        bool   `json:"done"`
 }
 
-func usersHandler(w http.ResponseWriter, r *http.Request) {
-	switch r.Method {
+func GetTask(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
 
-	case http.MethodGet:
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		if err := json.NewEncoder(w).Encode(users); err != nil {
-			fmt.Printf("failed to encode JSON: %v\n", err)
-		}
-
-	case http.MethodPost:
-		var newUser User
-
-		if err := json.NewDecoder(r.Body).Decode(&newUser); err != nil {
-			http.Error(w, "bad request body", http.StatusBadRequest)
-			return
-		}
-
-		newUser.ID = len(users)
-		users = append(users, newUser)
-
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusCreated)
-		if err := json.NewEncoder(w).Encode(newUser); err != nil {
-			fmt.Printf("failed to encode JSON %V\n", err)
-		}
-
-	default:
-		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
-
+	if err := json.NewEncoder(w).Encode(&tasks); err != nil {
+		fmt.Printf("failed to encode JSON: %v\n", err)
 	}
 }
 
-var users = []User{
-	{
-		ID:   0,
-		Name: "Serega Magnum",
-		Age:  19,
-	},
-	{
-		ID:   1,
-		Name: "Alice Fox",
-		Age:  20,
-	},
-	{
-		ID:   2,
-		Name: "Alpamys Kazakhski",
-		Age:  34,
-	},
+func PostTask(w http.ResponseWriter, r *http.Request) {
+	var newTask task
+
+	if err := json.NewDecoder(r.Body).Decode(&newTask); err != nil {
+		http.Error(w, "bad request body", http.StatusBadRequest)
+		return
+	}
+
+	newTask.ID = len(tasks) + 1
+	tasks = append(tasks, newTask)
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+
+	if err := json.NewEncoder(w).Encode(newTask); err != nil {
+		http.Error(w, "failed to encode response", http.StatusInternalServerError)
+		return
+	}
+}
+
+func PutTask(w http.ResponseWriter, r *http.Request) {
+	// add functionality later
+}
+
+func DeleteTask(w http.ResponseWriter, r *http.Request) {
+	// add functionality later
+}
+
+var tasks = []task{
+	{ID: 0, Title: "Write simple HTTP API", Description: "This is quite difficult for me", Done: false},
+	{ID: 1, Title: "Check my API", Description: "I hope it works", Done: false},
+	{ID: 2, Title: "Fix any bugs", Done: false},
 }
 
 func main() {
 	mux := http.NewServeMux()
-	mux.HandleFunc("/users", usersHandler)
 
-	err := http.ListenAndServe(":8080", mux)
-	if err != nil {
-		fmt.Println(err)
-	}
+	mux.HandleFunc("GET /tasks", GetTask)
+	mux.HandleFunc("POST /tasks", PostTask)
+
+	http.ListenAndServe(":8080", mux)
 }
